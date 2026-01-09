@@ -17,11 +17,11 @@
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
-  home.packages = [
-	pkgs.cowsay
-	pkgs.lolcat
+  home.packages = with pkgs; [
+	cowsay
+	lolcat
   ];
-  
+
   programs.git = {
        enable = true;
        extraConfig = {
@@ -30,5 +30,10 @@
             init.defaultBranch = "main";
             core.editor = "vim";
         };
+  };
+  
+  programs.emacs = {
+  	enable = true;
+  	package = pkgs.emacs;
   };
 }
