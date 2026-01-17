@@ -11,31 +11,12 @@
       ../../common.nix
     ];
 
-  # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/nvme0n1";
-  boot.loader.grub.useOSProber = true;
-
   networking.hostName = "office"; # Define your hostname.
 
   # Enable networking
-  networking = {
-    networkmanager = {
-      enable = true;
-      wifi.backend = "iwd";
-    };
-    wireless.iwd.enable = true;
-  };
+  networking.networkmanager.wifi.backend = "iwd";
+  networking.networkmanager.wireless.iwd.enable = true;
 
-  users.users.mjao = {
-    isNormalUser = true;
-    description = "mjao";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [
-      kdePackages.kate
-    #  thunderbird
-    ];
-  };
   # Install firefox.
   programs.firefox.enable = true;
 
@@ -45,13 +26,10 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    git
     lutris
     heroic
     protonup-qt
   ];
-
-  system.stateVersion = "25.05"; # Did you read the comment?
 
   # Enable OpenGL
   hardware.graphics = {
@@ -104,4 +82,6 @@
   services.devmon.enable = true;
   services.gvfs.enable = true; 
   services.udisks2.enable = true;
+
+  system.stateVersion = "25.05";
 }
