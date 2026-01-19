@@ -43,9 +43,6 @@
 
   networking.networkmanager.enable = true;
 
-  # Set your time zone.
-  time.timeZone = "Europe/Stockholm";
-
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 

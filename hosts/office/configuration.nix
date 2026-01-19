@@ -13,28 +13,21 @@
 
   networking.hostName = "office"; # Define your hostname.
 
-  # Enable networking
-  networking.networkmanager.wifi.backend = "iwd";
-  networking.networkmanager.wireless.iwd.enable = true;
-
-  # Install firefox.
-  programs.firefox.enable = true;
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     lutris
     heroic
     protonup-qt
+    vulkan-tools
   ];
 
   # Enable OpenGL
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
   };
+
 
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = ["nvidia"];
