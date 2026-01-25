@@ -20,6 +20,7 @@
   home.packages = with pkgs; [
 	cowsay
 	lolcat
+	discord
   ];
 
   programs.git = {
