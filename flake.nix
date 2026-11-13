@@ -34,6 +34,13 @@
     nixosConfigurations = {
       office   = mkHost "office";
       thinkpad = mkHost "thinkpad";
+      server   = mkHost "server";
+
+      # Custom installer ISO with SSH auto-enabled
+      installer = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [ ./iso/installer.nix ];
+      };
     };
 
     defaultPackage.${system} = linux-config.activationPackage;

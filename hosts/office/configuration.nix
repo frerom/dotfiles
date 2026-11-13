@@ -9,6 +9,7 @@
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ../../common.nix
+      ../../desktop-common.nix
     ];
 
   networking.hostName = "office"; # Define your hostname.
