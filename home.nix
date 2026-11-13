@@ -22,7 +22,19 @@
 	lolcat
 	discord
         claude-code
+	vim
   ];
+
+  home.sessionVariables = {
+    EDITOR = "vim";
+  };
+
+  programs.bash = {
+    enable = true;
+    sessionVariables = {
+      EDITOR = "vim";
+    };
+  };
 
   programs.git = {
        enable = true;
