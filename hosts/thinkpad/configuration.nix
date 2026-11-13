@@ -12,8 +12,24 @@
     ];
 
   networking.hostName = "thinkpad"; # Define your hostname.
+  networking.wireless.userControlled = true;
   
   boot.initrd.luks.devices."luks-2bfde333-e8e5-401e-92f8-b3b235565315".device = "/dev/disk/by-uuid/2bfde333-e8e5-401e-92f8-b3b235565315";
+
+
+
+  hardware.pulseaudio.enable = false;
+
+  services.pipewire = {
+    enable = true;
+
+    alsa = {
+      enable = true;
+      support32Bit = true;
+    };
+
+    pulse.enable = true;
+  };
 
 
   system.stateVersion = "25.05";

@@ -83,6 +83,11 @@
     git
     prusa-slicer
     kanata
+    pipewire
+    wireplumber
+    pavucontrol
+    proton-pass
+    anki-bin
   ];
 
   services.kanata = {

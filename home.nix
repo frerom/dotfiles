@@ -21,6 +21,7 @@
 	cowsay
 	lolcat
 	discord
+        claude-code
   ];
 
   programs.git = {
