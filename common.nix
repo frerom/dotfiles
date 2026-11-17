@@ -30,6 +30,9 @@
     packages = with pkgs; [];
   };
 
+  # Allow wheel group to use sudo without password
+  security.sudo.wheelNeedsPassword = false;
+
   # Bootloader (UEFI on all systems)
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
