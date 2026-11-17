@@ -40,6 +40,12 @@
   # NetworkManager for all hosts
   networking.networkmanager.enable = true;
 
+  # Avahi for mDNS/.local domain resolution
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;  # Enable .local domain resolution
+  };
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
