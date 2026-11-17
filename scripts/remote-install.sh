@@ -103,7 +103,7 @@ echo
 echo
 echo "Cloning configuration from GitHub..."
 cd /mnt
-nix-shell -p git --run "git clone $GITHUB_REPO etc/nixos"
+git clone "$GITHUB_REPO" etc/nixos
 echo "✓ Configuration cloned"
 
 # Generate hardware configuration
