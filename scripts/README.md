@@ -9,8 +9,8 @@ The NixOS server uses a **fully automatic installation** system embedded in the 
 1. **Boot from USB** - Server boots from the custom installer ISO
 2. **10-Second Countdown** - Display shows countdown with abort instructions
 3. **Automatic Installation** - Installer detects disk, partitions, installs NixOS from GitHub
-4. **Poweroff on Completion** - Server automatically powers off when done
-5. **Boot from Disk** - Remove USB drive and boot from internal SSD
+4. **Automatic Reboot** - Server automatically reboots into installed system when done
+5. **Boot from Disk** - USB drive can remain plugged in (BootNext ensures correct boot)
 
 ### Installation Process
 
@@ -28,11 +28,12 @@ sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 - Insert USB into server
 - Power on (or reboot)
 - Wait for automatic installation to complete
-- Server will poweroff when done (~15-30 minutes)
+- Server will automatically reboot when done (~15-30 minutes)
+- USB drive can remain plugged in
 
 **Step 4: First Boot**
-- Remove USB drive
-- Power on server
+- Wait 1-2 minutes for automatic boot into installed system
+- (Optional) Remove USB drive after boot completes
 - SSH into server: `ssh frerom@192.168.50.100` (uses your SSH key)
 - Set Samba password: `sudo smbpasswd -a frerom`
 - (Optional) Set console password if needed: `sudo passwd frerom`
@@ -59,7 +60,9 @@ sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 - SSH remains available for debugging (port 22)
 - Full logging to /var/log/auto-install.log
 - Error messages displayed on console
-- Won't poweroff on failure (for debugging)
+- Won't reboot on failure (for debugging)
+- Uses EFI BootNext for one-time boot from internal disk
+- Graceful fallback to poweroff if BootNext fails
 
 ### Debugging Failed Installation
 

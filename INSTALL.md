@@ -57,14 +57,14 @@ sync
 4. **Wait for 10-second countdown** (displayed on console if monitor connected)
    - Press Ctrl+C or power button to abort
 5. **Automatic installation begins** (~15-30 minutes)
-6. **Server powers off** when complete
+6. **Server automatically reboots** when complete
+   - USB drive can remain plugged in (BootNext ensures one-time boot from SSD)
 
 ### Step 4: First Boot
 
-1. **Remove USB drive**
-2. **Power on** the server
-3. **Wait 1-2 minutes** for boot
-4. **SSH into server:**
+1. **Wait 1-2 minutes** for automatic boot into installed system
+2. **(Optional) Remove USB drive** after first boot completes
+3. **SSH into server:**
    ```bash
    ssh frerom@192.168.50.100
    # or
@@ -118,8 +118,10 @@ The installer ISO performs these steps automatically:
    - Configures all services
 
 5. **Completion**
-   - Powers off automatically on success
-   - Displays error and stays running on failure
+   - Configures EFI BootNext to boot from internal disk
+   - Automatically reboots into installed system on success
+   - Falls back to poweroff if BootNext fails (remove USB manually)
+   - Displays error and stays running on other failures
    - Full logs at `/var/log/auto-install.log`
 
 ---

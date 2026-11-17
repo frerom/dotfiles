@@ -38,6 +38,7 @@
     parted
     gptfdisk
     util-linux  # for partprobe
+    efibootmgr  # for boot order management
   ];
 
   # Automatic installation script
@@ -217,24 +218,63 @@
       log "✓ INSTALLATION COMPLETE"
       log "════════════════════════════════════════"
 
-      echo ""
-      echo "════════════════════════════════════════"
-      echo "✓ Installation successful!"
-      echo "════════════════════════════════════════"
-      echo "Server will be accessible at:"
-      echo "  - ssh frerom@192.168.50.100"
-      echo "  - ssh frerom@server.local"
-      echo ""
-      echo "SSH uses your authorized key (no password)"
-      echo "Passwordless sudo enabled"
-      echo ""
-      echo "Powering off in 10 seconds..."
-      echo "Remove USB drive before next boot."
-      echo "════════════════════════════════════════"
-      sleep 10
+      # Set BootNext to automatically boot into installed system
+      log "Configuring EFI to boot from installed system..."
 
-      log "Powering off system"
-      systemctl poweroff --no-block
+      # Find the NixOS boot entry
+      BOOT_ENTRY=$(efibootmgr | grep -i "nixos" | head -1 | sed 's/^Boot\([0-9A-F]*\).*/\1/')
+
+      if [ -n "$BOOT_ENTRY" ]; then
+        log "Found NixOS boot entry: $BOOT_ENTRY"
+
+        # Set BootNext to boot NixOS once, then revert to normal boot order
+        if efibootmgr -n "$BOOT_ENTRY"; then
+          log "Successfully set BootNext to $BOOT_ENTRY"
+
+          echo ""
+          echo "════════════════════════════════════════"
+          echo "✓ Installation successful!"
+          echo "════════════════════════════════════════"
+          echo "Server will be accessible at:"
+          echo "  - ssh frerom@192.168.50.100"
+          echo "  - ssh frerom@server.local"
+          echo ""
+          echo "SSH uses your authorized key (no password)"
+          echo "Passwordless sudo enabled"
+          echo ""
+          echo "Rebooting into installed system in 10s..."
+          echo "You can leave the USB plugged in."
+          echo "════════════════════════════════════════"
+          sleep 10
+
+          log "Rebooting into installed system"
+          systemctl reboot --no-block
+        else
+          log "Warning: Failed to set BootNext, falling back to poweroff"
+          echo ""
+          echo "════════════════════════════════════════"
+          echo "⚠ Warning: Could not configure automatic boot"
+          echo "════════════════════════════════════════"
+          echo "Remove USB drive and power on manually"
+          echo ""
+          echo "Powering off in 10 seconds..."
+          echo "════════════════════════════════════════"
+          sleep 10
+          systemctl poweroff --no-block
+        fi
+      else
+        log "Warning: Could not find NixOS boot entry, falling back to poweroff"
+        echo ""
+        echo "════════════════════════════════════════"
+        echo "⚠ Warning: Could not find NixOS boot entry"
+        echo "════════════════════════════════════════"
+        echo "Remove USB drive and power on manually"
+        echo ""
+        echo "Powering off in 10 seconds..."
+        echo "════════════════════════════════════════"
+        sleep 10
+        systemctl poweroff --no-block
+      fi
     '';
     mode = "0755";
   };
