@@ -152,11 +152,11 @@
 
       # Partition the disk
       log "Partitioning $DISK..."
-      parted "$DISK" -- mklabel gpt || error_exit "Failed to create partition table"
-      parted "$DISK" -- mkpart ESP fat32 1MiB 512MiB || error_exit "Failed to create ESP partition"
-      parted "$DISK" -- set 1 esp on || error_exit "Failed to set ESP flag"
-      parted "$DISK" -- mkpart primary linux-swap 512MiB 16GiB || error_exit "Failed to create swap partition"
-      parted "$DISK" -- mkpart primary ext4 16GiB 100% || error_exit "Failed to create root partition"
+      parted --script "$DISK" -- mklabel gpt || error_exit "Failed to create partition table"
+      parted --script "$DISK" -- mkpart ESP fat32 1MiB 512MiB || error_exit "Failed to create ESP partition"
+      parted --script "$DISK" -- set 1 esp on || error_exit "Failed to set ESP flag"
+      parted --script "$DISK" -- mkpart primary linux-swap 512MiB 16GiB || error_exit "Failed to create swap partition"
+      parted --script "$DISK" -- mkpart primary ext4 16GiB 100% || error_exit "Failed to create root partition"
 
       # Wait for kernel to recognize partitions
       sleep 2
