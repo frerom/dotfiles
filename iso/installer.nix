@@ -182,8 +182,8 @@
       # Format partitions
       log "Formatting partitions..."
       mkfs.fat -F 32 -n BOOT "$BOOT" || error_exit "Failed to format boot partition"
-      mkswap -L swap "$SWAP" || error_exit "Failed to format swap partition"
-      mkfs.ext4 -L nixos "$ROOT" || error_exit "Failed to format root partition"
+      mkswap -f -L swap "$SWAP" || error_exit "Failed to format swap partition"
+      mkfs.ext4 -F -L nixos "$ROOT" || error_exit "Failed to format root partition"
       log "Partitions formatted successfully"
 
       # Mount filesystems
