@@ -221,8 +221,8 @@
       # Set BootNext to automatically boot into installed system
       log "Configuring EFI to boot from installed system..."
 
-      # Find the NixOS boot entry
-      BOOT_ENTRY=$(efibootmgr | grep -i "nixos" | head -1 | sed 's/^Boot\([0-9A-F]*\).*/\1/')
+      # Find the NixOS boot entry (systemd-boot creates "Linux Boot Manager")
+      BOOT_ENTRY=$(efibootmgr | grep -iE "(nixos|linux boot manager)" | head -1 | sed 's/^Boot\([0-9A-F]*\).*/\1/')
 
       if [ -n "$BOOT_ENTRY" ]; then
         log "Found NixOS boot entry: $BOOT_ENTRY"
