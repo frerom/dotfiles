@@ -1,130 +1,155 @@
 # Installation Scripts
 
-Automated scripts for installing NixOS on the headless server.
+## Automatic Installation (Current)
 
-## Scripts
+The NixOS server uses a **fully automatic installation** system embedded in the installer ISO. No external computer or manual scripts are needed.
 
-### `install-server.sh` - Main Installation Script
+### How It Works
 
-The main orchestration script that automates the entire installation process.
+1. **Boot from USB** - Server boots from the custom installer ISO
+2. **10-Second Countdown** - Display shows countdown with abort instructions
+3. **Automatic Installation** - Installer detects disk, partitions, installs NixOS from GitHub
+4. **Poweroff on Completion** - Server automatically powers off when done
+5. **Boot from Disk** - Remove USB drive and boot from internal SSD
 
-**Usage:**
+### Installation Process
+
+**Step 1: Build the Installer ISO**
 ```bash
-./scripts/install-server.sh
+nix build .#nixosConfigurations.installer.config.system.build.isoImage
 ```
 
-**What it does:**
-1. Finds the NixOS installer on your network
-2. SSHs into the installer
-3. Uploads and runs the remote installation script
-4. Waits for the server to reboot
-5. Runs post-installation setup (Samba/WebDAV passwords)
-6. Verifies all services are running
-
-**Before running:**
-- Edit the script and set `GITHUB_REPO` to your GitHub repository URL
-- Make sure you've pushed your latest changes to GitHub
-- Boot the server from the installer USB
-
-### `find-installer.sh` - Network Scanner
-
-Helper script to find the NixOS installer on your network.
-
-**Usage:**
+**Step 2: Write to USB**
 ```bash
-./scripts/find-installer.sh [network-range]
-
-# Examples:
-./scripts/find-installer.sh                    # Uses default 192.168.50.0/24
-./scripts/find-installer.sh 192.168.1.0/24     # Scan different network
+sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-**What it does:**
-- Scans the network for devices with SSH open
-- Identifies which ones are NixOS installers (hostname = "nixos")
-- Returns the IP address
+**Step 3: Boot Server from USB**
+- Insert USB into server
+- Power on (or reboot)
+- Wait for automatic installation to complete
+- Server will poweroff when done (~15-30 minutes)
 
-### `remote-install.sh` - Remote Installation Script
+**Step 4: First Boot**
+- Remove USB drive
+- Power on server
+- SSH into server: `ssh frerom@192.168.50.100` (password: `nixos`)
+- Change password: `passwd`
+- Set Samba password: `sudo smbpasswd -a frerom`
 
-The script that runs on the installer to perform the actual installation. This is automatically uploaded and executed by `install-server.sh`.
+### Automatic Installer Features
 
-**Usage (typically called by install-server.sh):**
+**Smart Disk Detection:**
+- Selects smallest non-removable disk (150-350GB range)
+- Skips USB drives and virtual devices
+- Perfect for Dell OptiPlex 7060 with 240GB SSD
+
+**Partitioning Scheme:**
+- 512MB EFI boot partition
+- 16GB swap partition
+- Remainder for root filesystem (ext4)
+
+**Configuration Source:**
+- Clones from: https://github.com/frerom/dotfiles.git
+- Installs with flake: `.#server`
+- Generates hardware-configuration.nix automatically
+
+**Safety Features:**
+- 10-second abort window on boot
+- SSH remains available for debugging (port 22)
+- Full logging to /var/log/auto-install.log
+- Error messages displayed on console
+- Won't poweroff on failure (for debugging)
+
+### Debugging Failed Installation
+
+If the automatic installation fails, the server will stay running and display an error message.
+
+**SSH into the installer:**
 ```bash
-bash remote-install.sh <github-repo-url> [disk-device]
-
-# Examples:
-bash remote-install.sh https://github.com/user/dotfiles.git auto
-bash remote-install.sh https://github.com/user/dotfiles.git /dev/sda
+# Find the installer IP (check your router or use nmap)
+ssh root@192.168.50.XXX
+# Password: nixos
 ```
 
-**What it does:**
-1. Detects or verifies the system disk
-2. Partitions the disk (EFI + swap + root)
-3. Formats the partitions
-4. Mounts filesystems
-5. Clones configuration from GitHub
-6. Generates hardware configuration
-7. Installs NixOS
-8. Reboots
+**Check installation logs:**
+```bash
+# View full installation log
+cat /var/log/auto-install.log
 
-**Disk detection:**
-- `auto`: Automatically detects /dev/sda or /dev/nvme0n1
-- Specific device: Uses the provided disk (e.g., /dev/sda)
+# View systemd service logs
+journalctl -u auto-install
+
+# Check service status
+systemctl status auto-install
+```
+
+**Manual installation (if needed):**
+```bash
+# Stop the automatic installer
+systemctl stop auto-install
+systemctl disable auto-install
+
+# Follow manual installation in INSTALL.md
+# Or inspect /etc/auto-install.sh to see what failed
+```
+
+**Common issues:**
+- **Network down**: Git clone will fail - check internet connection
+- **Wrong disk detected**: Review /var/log/auto-install.log for disk selection
+- **GitHub repo not accessible**: Verify https://github.com/frerom/dotfiles.git is public
+- **nixos-install fails**: Check hardware-configuration.nix was generated correctly
+
+### Stopping Automatic Installation
+
+If you want to abort the automatic installation:
+
+**During countdown (first 10 seconds):**
+- Press Ctrl+C if connected via console
+- Or press power button to shut down
+
+**After installation starts:**
+```bash
+# SSH into the installer
+ssh root@192.168.50.XXX
+
+# Stop the installation
+systemctl stop auto-install
+```
 
 ## Configuration
 
-Before using the scripts, update these settings in `install-server.sh`:
+The automatic installer is configured in `iso/installer.nix`:
 
-```bash
-# Your GitHub repository URL
-GITHUB_REPO="https://github.com/YOUR-USERNAME/dotfiles.git"
+```nix
+# GitHub repository to clone
+GITHUB_REPO="https://github.com/frerom/dotfiles.git"
 
-# Network range to scan for the installer
-NETWORK="192.168.50.0/24"
+# Disk size range for detection
+MIN_DISK_SIZE=$((150 * 1024 * 1024 * 1024))  # 150GB
+MAX_DISK_SIZE=$((350 * 1024 * 1024 * 1024))  # 350GB
 
-# Disk device (or "auto" for automatic detection)
-DISK="auto"
-
-# SSH key location
-SSH_KEY="$HOME/.ssh/id_ed25519"
+# Target flake configuration
+nixos-install --flake .#server
 ```
 
-## Troubleshooting
+## Legacy Scripts
 
-### Installer not found
+The old manual installation scripts have been moved to `scripts/old/`:
+- `install-server.sh` - Required external computer and manual confirmations
+- `find-installer.sh` - Network scanning (slow and unreliable)
+- `remote-install.sh` - Remote installation script
 
-If `find-installer.sh` can't find the installer:
+These are kept for reference but are no longer needed with the automatic installer.
 
-1. Wait longer (installer takes 1-2 minutes to boot)
-2. Check the network range is correct
-3. Verify the server is connected to the network
-4. Check your router's DHCP leases page
-5. Try scanning a different network range
+## Installer ISO Configuration
 
-### Wrong disk detected
+The automatic installer is defined in `iso/installer.nix` and includes:
+- SSH enabled on boot (root password: `nixos`)
+- Your SSH key pre-authorized for root access
+- NetworkManager for automatic network setup
+- Auto-install script at `/etc/auto-install.sh`
+- Systemd service `auto-install.service` (oneshot)
+- Helpful packages: vim, git, parted, gptfdisk, util-linux
 
-If auto-detection selects the wrong disk:
-
-1. Edit `install-server.sh`
-2. Set `DISK="/dev/sda"` (or the correct device)
-3. Run the script again
-
-### GitHub clone fails
-
-If cloning from GitHub fails:
-
-1. Verify the repository URL is correct
-2. Make sure the repository is public (or configure SSH keys on the installer)
-3. Check internet connectivity on the installer
-
-### SSH connection fails
-
-If SSH connection fails:
-
-1. Verify your SSH key is at `~/.ssh/id_ed25519`
-2. Check that the key is added to the installer ISO config
-3. Try adding `-i ~/.ssh/id_ed25519` to SSH commands
-
-## Manual Installation
-
-If you prefer manual installation or need to debug, see the main [INSTALL.md](../INSTALL.md) guide for detailed step-by-step instructions.
+See [INSTALL.md](../INSTALL.md) for complete installation guide and [iso/installer.nix](../iso/installer.nix) for the full implementation.

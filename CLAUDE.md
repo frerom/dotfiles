@@ -34,11 +34,16 @@ sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 ### Automated Server Installation
 ```bash
-# Install server automatically (after booting from USB)
-./scripts/install-server.sh
+# Build custom installer ISO with automatic installation
+nix build .#nixosConfigurations.installer.config.system.build.isoImage
 
-# Or manually step through the process
-# See INSTALL.md for detailed guide and scripts/README.md for script documentation
+# Write to USB
+sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+
+# Boot server from USB - automatic installation starts after 10-second countdown
+# Server will poweroff when installation complete (~15-30 minutes)
+
+# See INSTALL.md for detailed guide and scripts/README.md for installer documentation
 ```
 
 ### Flake Operations
@@ -126,10 +131,11 @@ flake.nix
 - `CLAUDE.md` - This file, repository structure and guidance
 - `scripts/README.md` - Installation scripts documentation
 
-### Automation Scripts
-- `scripts/install-server.sh` - Main automated installation script
-- `scripts/find-installer.sh` - Network scanner to find the installer
-- `scripts/remote-install.sh` - Remote installation script (runs on installer)
+### Automation
+- `iso/installer.nix` - Custom installer ISO with fully automatic installation
+- Automatic installation script embedded at `/etc/auto-install.sh`
+- Systemd oneshot service `auto-install.service`
+- Legacy scripts archived in `scripts/old/` (no longer needed)
 
 ## Key Configuration Details
 
@@ -163,15 +169,29 @@ flake.nix
 - **Hardware:** Dell OptiPlex 7060 (i5-8500, 16GB RAM, 240GB SSD)
 - **Network:** Static IP 192.168.50.100, accessible as server.local via mDNS
 - **SSH:** Key-based authentication only, no password authentication
+- **Installation:** Fully automatic from USB - powers off when complete
 - **Services:**
   - Jellyfin media server (port 8096)
   - Samba/SMB file sharing (ports 139, 445)
   - NFS file sharing (port 2049)
-  - WebDAV via nginx (port 80)
+  - WebDAV via nginx (port 80) - currently disabled
   - Avahi for mDNS discovery
 - **Media Storage:** /mnt/media (configured for separate storage drive)
 - **Firewall:** Enabled with specific ports open for services
 - See `INSTALL.md` for complete installation guide
+
+### Installer ISO Specifics
+- **Custom ISO:** `iso/installer.nix` with embedded automatic installation
+- **Auto-Install Features:**
+  - 10-second abort countdown on boot
+  - Smart disk detection (150-350GB range, non-removable)
+  - Automatic partitioning (512MB EFI + 16GB swap + rest root)
+  - Clones from GitHub: https://github.com/frerom/dotfiles.git
+  - Generates hardware-configuration.nix
+  - Installs NixOS with `.#server` flake
+  - Powers off on success, stays running on failure
+- **Debugging:** SSH enabled (root password: "nixos"), logs at /var/log/auto-install.log
+- **Safety:** 10-second abort window, full error reporting, can be stopped via `systemctl stop auto-install`
 
 ### Emacs Configuration
 - Standalone `init.el` file (not managed via home-manager)
