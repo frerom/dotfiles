@@ -289,7 +289,7 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "no";
-      ExecStart = "/etc/auto-install.sh";
+      ExecStart = "${pkgs.bash}/bin/bash /etc/auto-install.sh";
       StandardOutput = "journal+console";
       StandardError = "journal+console";
     };
