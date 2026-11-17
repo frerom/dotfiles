@@ -55,18 +55,26 @@ echo_success "Prerequisites OK"
 
 # Find the installer
 echo
-echo_info "Searching for NixOS installer on network $NETWORK..."
-echo_info "This may take 1-2 minutes..."
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALLER_IP=$(bash "$SCRIPT_DIR/find-installer.sh" "$NETWORK" | tail -1)
 
-if [ -z "$INSTALLER_IP" ]; then
-    echo_error "Failed to find NixOS installer"
-    exit 1
+# Allow passing IP as first argument to skip network scan
+if [ -n "$1" ]; then
+    INSTALLER_IP="$1"
+    echo_info "Using provided IP: $INSTALLER_IP"
+else
+    echo_info "Searching for NixOS installer on network $NETWORK..."
+    echo_info "This may take 1-2 minutes..."
+
+    INSTALLER_IP=$(bash "$SCRIPT_DIR/find-installer.sh" "$NETWORK" | tail -1)
+
+    if [ -z "$INSTALLER_IP" ]; then
+        echo_error "Failed to find NixOS installer"
+        exit 1
+    fi
+
+    echo_success "Found installer at $INSTALLER_IP"
 fi
-
-echo_success "Found installer at $INSTALLER_IP"
 
 # Confirm installation
 echo
