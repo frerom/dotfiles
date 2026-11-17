@@ -95,6 +95,9 @@
   services.nginx = {
     enable = true;
     virtualHosts."server.local" = {
+      listen = [
+        { addr = "0.0.0.0"; port = 80; }
+      ];
       locations."/webdav" = {
         extraConfig = ''
           dav_methods PUT DELETE MKCOL COPY MOVE;
