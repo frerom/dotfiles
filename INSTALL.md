@@ -69,13 +69,13 @@ sync
    ssh frerom@192.168.50.100
    # or
    ssh frerom@server.local
-   # Password: nixos
+   # Uses your SSH key automatically (no password needed)
    ```
 
 ### Step 5: Post-Installation Setup
 
 ```bash
-# Change your password
+# (Optional) Change your password from "nixos" if you need console access
 passwd
 
 # Set Samba password for file sharing

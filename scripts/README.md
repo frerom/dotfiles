@@ -33,9 +33,9 @@ sudo dd if=result/iso/nixos-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 **Step 4: First Boot**
 - Remove USB drive
 - Power on server
-- SSH into server: `ssh frerom@192.168.50.100` (password: `nixos`)
-- Change password: `passwd`
+- SSH into server: `ssh frerom@192.168.50.100` (uses your SSH key)
 - Set Samba password: `sudo smbpasswd -a frerom`
+- (Optional) Change console password: `passwd`
 
 ### Automatic Installer Features
 
