@@ -226,7 +226,7 @@
       echo "  - ssh frerom@server.local"
       echo ""
       echo "SSH uses your authorized key (no password)"
-      echo "Console password (if needed): nixos"
+      echo "Passwordless sudo enabled"
       echo ""
       echo "Powering off in 10 seconds..."
       echo "Remove USB drive before next boot."

@@ -75,11 +75,11 @@ sync
 ### Step 5: Post-Installation Setup
 
 ```bash
-# (Optional) Change your password from "nixos" if you need console access
-passwd
-
 # Set Samba password for file sharing
 sudo smbpasswd -a frerom
+
+# (Optional) Set console password if you need local login
+sudo passwd frerom
 
 # Verify services are running
 systemctl status jellyfin

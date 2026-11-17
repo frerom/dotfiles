@@ -50,8 +50,8 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFgWwucj/0VABqt2HakJhh8Bfb+amGDgOMl5uwhGkxdD roman.fredrik@gmail.com"
   ];
 
-  # Set initial password (change with 'passwd' after first login)
-  users.users.frerom.initialPassword = "nixos";
+  # No password needed - SSH key auth only
+  # Set password later if console access needed: ssh frerom@server.local passwd
 
   # Jellyfin media server
   services.jellyfin = {
