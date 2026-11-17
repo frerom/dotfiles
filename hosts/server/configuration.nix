@@ -91,37 +91,37 @@
     '';
   };
 
-  # WebDAV (via nginx)
-  services.nginx = {
-    enable = true;
-    virtualHosts."server.local" = {
-      listen = [
-        { addr = "0.0.0.0"; port = 80; }
-      ];
-      locations."/webdav" = {
-        extraConfig = ''
-          dav_methods PUT DELETE MKCOL COPY MOVE;
-          dav_ext_methods PROPFIND OPTIONS;
-          dav_access user:rw group:rw all:r;
-
-          auth_basic "Restricted";
-          auth_basic_user_file /etc/nginx/webdav.passwd;
-
-          client_max_body_size 0;
-          create_full_put_path on;
-
-          alias /mnt/media/;
-        '';
-      };
-    };
-  };
+  # WebDAV (via nginx) - Disabled for now, will configure after installation
+  # services.nginx = {
+  #   enable = true;
+  #   virtualHosts."server.local" = {
+  #     listen = [
+  #       { addr = "0.0.0.0"; port = 80; }
+  #     ];
+  #     locations."/webdav" = {
+  #       extraConfig = ''
+  #         dav_methods PUT DELETE MKCOL COPY MOVE;
+  #         dav_ext_methods PROPFIND OPTIONS;
+  #         dav_access user:rw group:rw all:r;
+  #
+  #         auth_basic "Restricted";
+  #         auth_basic_user_file /etc/nginx/webdav.passwd;
+  #
+  #         client_max_body_size 0;
+  #         create_full_put_path on;
+  #
+  #         alias /mnt/media/;
+  #       '';
+  #     };
+  #   };
+  # };
 
   # Firewall configuration
   networking.firewall = {
     enable = true;
     allowedTCPPorts = [
       22    # SSH
-      80    # HTTP (WebDAV)
+      # 80    # HTTP (WebDAV) - Disabled for now
       139   # Samba
       445   # Samba
       2049  # NFS
