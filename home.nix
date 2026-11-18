@@ -38,7 +38,7 @@
 
   programs.git = {
        enable = true;
-       extraConfig = {
+       settings = {
             user.name = "Fredrik Roman";
             user.email = "roman.fredrik@gmail.com";
             init.defaultBranch = "main";
