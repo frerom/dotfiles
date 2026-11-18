@@ -11,6 +11,7 @@ let
   # Reachable as http://<name>/ and http://<name>.home.arpa/
   proxiedServices = {
     jellyfin = 8096;
+    monitor = 3000;  # Grafana, see network-monitor.nix
   };
 in
 {
@@ -18,6 +19,7 @@ in
     ./hardware-configuration.nix
     ../../common.nix
     ../../server-common.nix
+    ./network-monitor.nix
   ];
 
   networking.hostName = "server";
