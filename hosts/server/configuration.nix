@@ -114,6 +114,7 @@ in
       no-resolv = true;
       server = [ "1.1.1.1" "9.9.9.9" ];
 
+      no-hosts = true;  # /etc/hosts maps "server" to 127.0.0.2
       domain-needed = true;
       bogus-priv = true;
       local = "/${localDomain}/";
