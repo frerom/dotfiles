@@ -43,6 +43,7 @@
             user.email = "roman.fredrik@gmail.com";
             init.defaultBranch = "main";
             core.editor = "vim";
+            url."git@github.com:".insteadOf = "https://github.com/";
         };
   };
   
