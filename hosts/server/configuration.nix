@@ -1,7 +1,18 @@
 # Server configuration for Dell OptiPlex 7060
 # Headless NixOS server running Jellyfin and NAS services
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  serverIP = "192.168.50.100";
+  localDomain = "home.arpa";
+
+  # Friendly names -> local port. Each name resolves (via dnsmasq) to this
+  # server and nginx proxies http://<name>/ to the port.
+  # Reachable as http://<name>/ and http://<name>.home.arpa/
+  proxiedServices = {
+    jellyfin = 8096;
+  };
+in
 {
   imports = [
     ./hardware-configuration.nix
@@ -94,6 +105,44 @@
     '';
   };
 
+  # LAN DNS server (point the router's DHCP DNS setting at 192.168.50.100)
+  services.dnsmasq = {
+    enable = true;
+    settings = {
+      # Upstream resolvers. Deliberately NOT the router, to avoid a loop if
+      # the router itself is configured to use this server.
+      no-resolv = true;
+      server = [ "1.1.1.1" "9.9.9.9" ];
+
+      domain-needed = true;
+      bogus-priv = true;
+      local = "/${localDomain}/";
+      domain = localDomain;
+      expand-hosts = true;
+      cache-size = 1000;
+
+      # "server" and each proxied service -> this machine.
+      # address=/name/ip matches both "name" and "name.home.arpa".
+      address = map (name: "/${name}/${serverIP}")
+        ([ "server" ] ++ lib.attrNames proxiedServices)
+        ++ map (name: "/${name}.${localDomain}/${serverIP}")
+        ([ "server" ] ++ lib.attrNames proxiedServices);
+    };
+  };
+
+  # Reverse proxy: http://<name>/ -> 127.0.0.1:<port>
+  services.nginx = {
+    enable = true;
+    recommendedProxySettings = true;
+    virtualHosts = lib.mapAttrs (name: port: {
+      serverAliases = [ "${name}.${localDomain}" ];
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString port}";
+        proxyWebsockets = true;
+      };
+    }) proxiedServices;
+  };
+
   # WebDAV (via nginx) - Disabled for now, will configure after installation
   # services.nginx = {
   #   enable = true;
@@ -124,7 +173,8 @@
     enable = true;
     allowedTCPPorts = [
       22    # SSH
-      # 80    # HTTP (WebDAV) - Disabled for now
+      53    # DNS (dnsmasq)
+      80    # HTTP (nginx reverse proxy)
       139   # Samba
       445   # Samba
       2049  # NFS
@@ -132,6 +182,7 @@
       8920  # Jellyfin HTTPS
     ];
     allowedUDPPorts = [
+      53    # DNS (dnsmasq)
       137   # Samba
       138   # Samba
       2049  # NFS
