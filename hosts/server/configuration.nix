@@ -146,5 +146,39 @@
     "d /mnt/media 0755 frerom users -"
   ];
 
+  # Claude Code remote control service
+  systemd.services.claude-remote-control = {
+    description = "Claude Code Remote Control for Dotfiles Editing";
+    documentation = [ "https://code.claude.com/docs" ];
+
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "frerom";
+      Group = "users";
+      WorkingDirectory = "/etc/nixos";
+
+      # Start remote control in background
+      ExecStart = "${pkgs.claude-code}/bin/claude --remote-control --name 'Dotfiles Server' --bg";
+
+      # Stop the background session when service stops
+      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --format json | ${pkgs.jq}/bin/jq -r \".[] | select(.name == \\\"Dotfiles Server\\\") | .id\" | xargs -r ${pkgs.claude-code}/bin/claude stop'";
+
+      # Restart on failure
+      Restart = "on-failure";
+      RestartSec = 30;
+
+      # Environment
+      Environment = [
+        "PATH=/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
+        "HOME=/home/frerom"
+      ];
+    };
+  };
+
   system.stateVersion = "25.05";
 }
