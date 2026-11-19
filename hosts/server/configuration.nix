@@ -222,11 +222,11 @@ in
       # Stop the background session when service stops
       ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --format json | ${pkgs.jq}/bin/jq -r \".[] | select(.name == \\\"Dotfiles Server\\\") | .id\" | xargs -r ${pkgs.claude-code}/bin/claude stop'";
 
-      # Always restart to ensure the service stays running
-      Restart = "always";
+      # Restart on failure with faster recovery
+      Restart = "on-failure";
       RestartSec = 10;
 
-      # Ensure systemd tracks all child processes properly
+      # Ensure systemd tracks and manages all child processes
       KillMode = "mixed";
 
       # Environment
@@ -234,6 +234,32 @@ in
         "PATH=/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
         "HOME=/home/frerom"
       ];
+    };
+  };
+
+  # Healthcheck timer to restart claude-remote-control if the process dies
+  systemd.services.claude-remote-control-healthcheck = {
+    description = "Check if Claude Code Remote Control is running";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "frerom";
+      Group = "users";
+      Environment = [
+        "PATH=/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
+        "HOME=/home/frerom"
+      ];
+      # Check if the "Dotfiles Server" session is running, restart service if not
+      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --json 2>/dev/null | ${pkgs.jq}/bin/jq -e \".[] | select(.name == \\\"Dotfiles Server\\\")\" > /dev/null || ${pkgs.systemd}/bin/systemctl restart claude-remote-control.service'";
+    };
+  };
+
+  systemd.timers.claude-remote-control-healthcheck = {
+    description = "Timer for Claude Code Remote Control healthcheck";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "5min";
+      OnUnitActiveSec = "5min";
+      Unit = "claude-remote-control-healthcheck.service";
     };
   };
 
