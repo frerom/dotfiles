@@ -78,6 +78,16 @@ in
     openFirewall = false;
   };
 
+  # Remote access: the server advertises its own LAN IP to the tailnet, so
+  # https://<name>.frerom.se (public DNS -> 192.168.50.100) works from any
+  # device running Tailscale. Route must be approved once in the admin console.
+  services.tailscale = {
+    enable = true;
+    openFirewall = true;  # UDP 41641 for direct connections
+    useRoutingFeatures = "server";
+    extraSetFlags = [ "--advertise-routes=${serverIP}/32" ];
+  };
+
   # Samba/SMB file sharing
   services.samba = {
     enable = true;

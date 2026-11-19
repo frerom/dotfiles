@@ -174,6 +174,7 @@ flake.nix
   - Jellyfin media server at https://jellyfin.frerom.se (nginx → 8096, port 8096 not exposed)
   - Grafana network monitor at https://grafana.frerom.se
   - TLS: Let's Encrypt wildcard `*.frerom.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); public wildcard `*.frerom.se` A record at Loopia → 192.168.50.100 (apex/www still parked), so new services in `proxiedServices` need no DNS edits
+  - Tailscale: server advertises subnet route `192.168.50.100/32`, so the `*.frerom.se` services work remotely from tailnet devices (same URLs/cert)
   - Samba/SMB file sharing (ports 139, 445)
   - NFS file sharing (port 2049)
   - WebDAV via nginx (port 80) - currently disabled
