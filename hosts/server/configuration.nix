@@ -242,14 +242,9 @@ in
     description = "Check if Claude Code Remote Control is running";
     serviceConfig = {
       Type = "oneshot";
-      User = "frerom";
-      Group = "users";
-      Environment = [
-        "PATH=/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
-        "HOME=/home/frerom"
-      ];
+      # Run as root so it can restart the service without sudo
       # Check if the "Dotfiles Server" session is running, restart service if not
-      ExecStart = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --json 2>/dev/null | ${pkgs.jq}/bin/jq -e \".[] | select(.name == \\\"Dotfiles Server\\\")\" > /dev/null || ${pkgs.systemd}/bin/systemctl restart claude-remote-control.service'";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'su - frerom -c \"${pkgs.claude-code}/bin/claude agents --json 2>/dev/null\" | ${pkgs.jq}/bin/jq -e ''.[] | select(.name == \"Dotfiles Server\")'' > /dev/null || ${pkgs.systemd}/bin/systemctl restart claude-remote-control.service'";
     };
   };
 
