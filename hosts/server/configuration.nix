@@ -9,10 +9,10 @@ let
   # Public domain used for TLS. Names under it only exist in the LAN DNS
   # (dnsmasq below); the public Loopia zone only gets the temporary
   # _acme-challenge TXT records Let's Encrypt needs to issue the cert.
-  tlsDomain = "home.rekordfirman.se";
+  tlsDomain = "home.frerom.se";
 
   # Friendly names -> local port. Each name resolves (via dnsmasq) to this
-  # server and nginx proxies https://<name>.home.rekordfirman.se/ to the port.
+  # server and nginx proxies https://<name>.home.frerom.se/ to the port.
   # http://<name>/ and http://<name>.home.arpa/ redirect there.
   proxiedServices = {
     jellyfin = 8096;
@@ -132,7 +132,7 @@ in
 
       # "server" and each proxied service -> this machine.
       # address=/name/ip matches "name", "name.home.arpa" and
-      # "name.home.rekordfirman.se".
+      # "name.home.frerom.se".
       address = lib.concatMap (name: [
         "/${name}/${serverIP}"
         "/${name}.${localDomain}/${serverIP}"
@@ -141,7 +141,7 @@ in
     };
   };
 
-  # TLS certificate: one wildcard cert for *.home.rekordfirman.se from
+  # TLS certificate: one wildcard cert for *.home.frerom.se from
   # Let's Encrypt, validated via DNS-01 through the Loopia API, so nothing
   # has to be exposed to the internet. Renewed automatically.
   #
@@ -161,7 +161,7 @@ in
     };
   };
 
-  # Reverse proxy: https://<name>.home.rekordfirman.se/ -> 127.0.0.1:<port>
+  # Reverse proxy: https://<name>.home.frerom.se/ -> 127.0.0.1:<port>
   # http://<name>/ and http://<name>.home.arpa/ redirect to it.
   services.nginx = {
     enable = true;

@@ -171,9 +171,9 @@ flake.nix
 - **SSH:** Key-based authentication only, no password authentication
 - **Installation:** Fully automatic from USB - powers off when complete
 - **Services:**
-  - Jellyfin media server at https://jellyfin.home.rekordfirman.se (nginx → 8096, port 8096 not exposed)
-  - Grafana network monitor at https://grafana.home.rekordfirman.se
-  - TLS: Let's Encrypt wildcard `*.home.rekordfirman.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); names resolve to the server only via the LAN dnsmasq
+  - Jellyfin media server at https://jellyfin.home.frerom.se (nginx → 8096, port 8096 not exposed)
+  - Grafana network monitor at https://grafana.home.frerom.se
+  - TLS: Let's Encrypt wildcard `*.home.frerom.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); names resolve to the server only via the LAN dnsmasq
   - Samba/SMB file sharing (ports 139, 445)
   - NFS file sharing (port 2049)
   - WebDAV via nginx (port 80) - currently disabled
