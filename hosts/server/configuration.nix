@@ -6,9 +6,14 @@ let
   serverIP = "192.168.50.100";
   localDomain = "home.arpa";
 
+  # Public domain used for TLS. Names under it only exist in the LAN DNS
+  # (dnsmasq below); the public Loopia zone only gets the temporary
+  # _acme-challenge TXT records Let's Encrypt needs to issue the cert.
+  tlsDomain = "home.rekordfirman.se";
+
   # Friendly names -> local port. Each name resolves (via dnsmasq) to this
-  # server and nginx proxies http://<name>/ to the port.
-  # Reachable as http://<name>/ and http://<name>.home.arpa/
+  # server and nginx proxies https://<name>.home.rekordfirman.se/ to the port.
+  # http://<name>/ and http://<name>.home.arpa/ redirect there.
   proxiedServices = {
     jellyfin = 8096;
     grafana = 3000;  # Grafana, see network-monitor.nix
@@ -66,10 +71,11 @@ in
   # No password needed - SSH key auth only
   # Set password later if console access needed: ssh frerom@server.local passwd
 
-  # Jellyfin media server
+  # Jellyfin media server. Only reachable through nginx (HTTPS); the
+  # discovery/DLNA UDP ports are opened in the firewall section below.
   services.jellyfin = {
     enable = true;
-    openFirewall = true;
+    openFirewall = false;
   };
 
   # Samba/SMB file sharing
@@ -125,23 +131,58 @@ in
       cache-size = 1000;
 
       # "server" and each proxied service -> this machine.
-      # address=/name/ip matches both "name" and "name.home.arpa".
-      address = map (name: "/${name}/${serverIP}")
-        ([ "server" ] ++ lib.attrNames proxiedServices)
-        ++ map (name: "/${name}.${localDomain}/${serverIP}")
-        ([ "server" ] ++ lib.attrNames proxiedServices);
+      # address=/name/ip matches "name", "name.home.arpa" and
+      # "name.home.rekordfirman.se".
+      address = lib.concatMap (name: [
+        "/${name}/${serverIP}"
+        "/${name}.${localDomain}/${serverIP}"
+        "/${name}.${tlsDomain}/${serverIP}"
+      ]) ([ "server" ] ++ lib.attrNames proxiedServices);
     };
   };
 
-  # Reverse proxy: http://<name>/ -> 127.0.0.1:<port>
+  # TLS certificate: one wildcard cert for *.home.rekordfirman.se from
+  # Let's Encrypt, validated via DNS-01 through the Loopia API, so nothing
+  # has to be exposed to the internet. Renewed automatically.
+  #
+  # Needs /var/lib/secrets/loopia.env (root-only, not in git):
+  #   LOOPIA_API_USER=<api user>@loopiaapi
+  #   LOOPIA_API_PASSWORD=<api password>
+  # The Loopia API user needs: addZoneRecord, getZoneRecords,
+  # removeZoneRecord, removeSubdomain.
+  # Until it exists, nginx serves a self-signed placeholder cert.
+  security.acme = {
+    acceptTerms = true;
+    certs.${tlsDomain} = {
+      domain = "*.${tlsDomain}";
+      dnsProvider = "loopia";
+      environmentFile = "/var/lib/secrets/loopia.env";
+      group = "nginx";
+    };
+  };
+
+  # Reverse proxy: https://<name>.home.rekordfirman.se/ -> 127.0.0.1:<port>
+  # http://<name>/ and http://<name>.home.arpa/ redirect to it.
   services.nginx = {
     enable = true;
     recommendedProxySettings = true;
-    virtualHosts = lib.mapAttrs (name: port: {
-      serverAliases = [ "${name}.${localDomain}" ];
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:${toString port}";
-        proxyWebsockets = true;
+    recommendedTlsSettings = true;
+    virtualHosts = lib.concatMapAttrs (name: port: {
+      "${name}.${tlsDomain}" = {
+        useACMEHost = tlsDomain;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:${toString port}";
+          proxyWebsockets = true;
+        };
+        # Jellyfin image/subtitle uploads
+        extraConfig = ''
+          client_max_body_size 100M;
+        '';
+      };
+      ${name} = {
+        serverAliases = [ "${name}.${localDomain}" ];
+        locations."/".return = "301 https://${name}.${tlsDomain}$request_uri";
       };
     }) proxiedServices;
   };
@@ -177,12 +218,11 @@ in
     allowedTCPPorts = [
       22    # SSH
       53    # DNS (dnsmasq)
-      80    # HTTP (nginx reverse proxy)
+      80    # HTTP (nginx, redirects to HTTPS)
+      443   # HTTPS (nginx reverse proxy)
       139   # Samba
       445   # Samba
       2049  # NFS
-      8096  # Jellyfin HTTP
-      8920  # Jellyfin HTTPS
     ];
     allowedUDPPorts = [
       53    # DNS (dnsmasq)
