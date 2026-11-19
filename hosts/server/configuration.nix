@@ -11,7 +11,7 @@ let
   # Reachable as http://<name>/ and http://<name>.home.arpa/
   proxiedServices = {
     jellyfin = 8096;
-    monitor = 3000;  # Grafana, see network-monitor.nix
+    grafana = 3000;  # Grafana, see network-monitor.nix
   };
 in
 {
@@ -222,9 +222,12 @@ in
       # Stop the background session when service stops
       ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --format json | ${pkgs.jq}/bin/jq -r \".[] | select(.name == \\\"Dotfiles Server\\\") | .id\" | xargs -r ${pkgs.claude-code}/bin/claude stop'";
 
-      # Restart on failure
-      Restart = "on-failure";
-      RestartSec = 30;
+      # Always restart to ensure the service stays running
+      Restart = "always";
+      RestartSec = 10;
+
+      # Ensure systemd tracks all child processes properly
+      KillMode = "mixed";
 
       # Environment
       Environment = [
