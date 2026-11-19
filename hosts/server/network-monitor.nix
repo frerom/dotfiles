@@ -1,6 +1,6 @@
 # Network monitoring: is a glitch caused by the router, the ISP, or the wider
 # internet? Pings every checkpoint once per second and shows the result in
-# Grafana at https://grafana.home.frerom.se/ (proxied by nginx, see
+# Grafana at https://grafana.frerom.se/ (proxied by nginx, see
 # configuration.nix).
 #
 #   smokeping_prober  -> 1/s ICMP to router, ISP routers and public hosts
@@ -346,8 +346,8 @@ in
       server = {
         http_addr = "127.0.0.1";
         http_port = ports.grafana;
-        domain = "grafana.home.frerom.se";
-        root_url = "https://grafana.home.frerom.se/";
+        domain = "grafana.frerom.se";
+        root_url = "https://grafana.frerom.se/";
       };
       # Generated on first start, see preStart below.
       security = {
