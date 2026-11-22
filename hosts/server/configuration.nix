@@ -274,7 +274,7 @@ in
       Group = "users";
       WorkingDirectory = "/etc/nixos";
 
-      ExecStart = "${pkgs.claude-code}/bin/claude remote-control --name 'Dotfiles Server'";
+      ExecStart = "${pkgs.claude-code}/bin/claude remote-control --spawn=same-dir --name 'Dotfiles Server'";
 
       Restart = "always";
       RestartSec = 10;
