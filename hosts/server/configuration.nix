@@ -250,7 +250,13 @@ in
     "d /mnt/media 0755 frerom users -"
   ];
 
-  # Claude Code remote control service
+  # Claude Code remote control service.
+  #
+  # `claude remote-control` is a persistent foreground server, so systemd
+  # supervises the real process: if it exits or crashes for any reason it is
+  # restarted, forever. (The previous `--bg` + oneshot setup handed the
+  # session to a detached daemon systemd couldn't see, so when that daemon
+  # died the unit still showed "active (exited)" and nothing restarted it.)
   systemd.services.claude-remote-control = {
     description = "Claude Code Remote Control for Dotfiles Editing";
     documentation = [ "https://code.claude.com/docs" ];
@@ -259,52 +265,25 @@ in
     wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
 
+    # Never give up restarting, however often it fails (e.g. network down)
+    startLimitIntervalSec = 0;
+
     serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
+      Type = "simple";
       User = "frerom";
       Group = "users";
       WorkingDirectory = "/etc/nixos";
 
-      # Start remote control in background
-      ExecStart = "${pkgs.claude-code}/bin/claude --remote-control --name 'Dotfiles Server' --bg";
+      ExecStart = "${pkgs.claude-code}/bin/claude remote-control --name 'Dotfiles Server'";
 
-      # Stop the background session when service stops
-      ExecStop = "${pkgs.bash}/bin/bash -c '${pkgs.claude-code}/bin/claude agents --format json | ${pkgs.jq}/bin/jq -r \".[] | select(.name == \\\"Dotfiles Server\\\") | .id\" | xargs -r ${pkgs.claude-code}/bin/claude stop'";
-
-      # Restart on failure with faster recovery
-      Restart = "on-failure";
+      Restart = "always";
       RestartSec = 10;
+      TimeoutStopSec = 30;
 
-      # Ensure systemd tracks and manages all child processes
-      KillMode = "mixed";
-
-      # Environment
       Environment = [
-        "PATH=/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
+        "PATH=/run/wrappers/bin:/run/current-system/sw/bin:/home/frerom/.nix-profile/bin"
         "HOME=/home/frerom"
       ];
-    };
-  };
-
-  # Healthcheck timer to restart claude-remote-control if the process dies
-  systemd.services.claude-remote-control-healthcheck = {
-    description = "Check if Claude Code Remote Control is running";
-    serviceConfig = {
-      Type = "oneshot";
-      # Run as root so it can restart the service without sudo
-      # Check if the "Dotfiles Server" session is running, restart service if not
-      ExecStart = "${pkgs.bash}/bin/bash -c 'su - frerom -c \"${pkgs.claude-code}/bin/claude agents --json 2>/dev/null\" | ${pkgs.jq}/bin/jq -e ''.[] | select(.name == \"Dotfiles Server\")'' > /dev/null || ${pkgs.systemd}/bin/systemctl restart claude-remote-control.service'";
-    };
-  };
-
-  systemd.timers.claude-remote-control-healthcheck = {
-    description = "Timer for Claude Code Remote Control healthcheck";
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnBootSec = "5min";
-      OnUnitActiveSec = "5min";
-      Unit = "claude-remote-control-healthcheck.service";
     };
   };
 
