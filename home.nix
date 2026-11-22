@@ -34,6 +34,10 @@
     sessionVariables = {
       EDITOR = "vim";
     };
+    shellAliases = {
+      # Bypass switchInhibitors check for nixos-rebuild
+      nixos-rebuild = "NIXOS_NO_CHECK=1 nixos-rebuild";
+    };
   };
 
   programs.git = {

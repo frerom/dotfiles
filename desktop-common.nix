@@ -14,8 +14,8 @@
   services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -64,6 +64,7 @@
     pavucontrol
     proton-pass
     anki-bin
+    cifs-utils
   ];
 
   # Fonts
@@ -71,4 +72,20 @@
     fira-code
     nerd-fonts.fira-code
   ];
+
+  # SMB mount for server media share
+  fileSystems."/mnt/server-media" = {
+    device = "//server.local/media";
+    fsType = "cifs";
+    options = [
+      "credentials=/etc/nixos/smb-secrets"
+      "uid=1000"  # frerom user
+      "gid=100"   # users group
+      "x-systemd.automount"
+      "noauto"
+      "x-systemd.idle-timeout=60"
+      "x-systemd.device-timeout=5s"
+      "x-systemd.mount-timeout=5s"
+    ];
+  };
 }
