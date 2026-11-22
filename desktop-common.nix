@@ -73,9 +73,10 @@
     nerd-fonts.fira-code
   ];
 
-  # SMB mount for server media share
+  # SMB mount for server media share. files.frerom.se resolves to the
+  # server's LAN IP, which is also reachable remotely over Tailscale.
   fileSystems."/mnt/server-media" = {
-    device = "//server.local/media";
+    device = "//files.frerom.se/media";
     fsType = "cifs";
     options = [
       "credentials=/etc/nixos/smb-secrets"

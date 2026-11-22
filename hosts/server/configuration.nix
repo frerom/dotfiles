@@ -17,6 +17,7 @@ let
   proxiedServices = {
     jellyfin = 8096;
     grafana = 3000;  # Grafana, see network-monitor.nix
+    music = 4533;    # Navidrome
   };
 in
 {
@@ -78,6 +79,17 @@ in
     openFirewall = false;
   };
 
+  # Navidrome music server at https://music.frerom.se (nginx -> 4533).
+  # Listens on 127.0.0.1 only; reads /mnt/media/music (read-only bind).
+  services.navidrome = {
+    enable = true;
+    settings = {
+      Address = "127.0.0.1";
+      Port = 4533;
+      MusicFolder = "/mnt/media/music";
+    };
+  };
+
   # Remote access: the server advertises its own LAN IP to the tailnet, so
   # https://<name>.frerom.se (public DNS -> 192.168.50.100) works from any
   # device running Tailscale. Route must be approved once in the admin console.
@@ -98,10 +110,22 @@ in
         "server string" = "NixOS Server";
         "netbios name" = "server";
         security = "user";
-        "hosts allow" = "192.168.50. 127.0.0.1 localhost";
+        # LAN + tailnet (Tailscale CGNAT range and its IPv6 ULA), so
+        # smb://files.frerom.se also works remotely over Tailscale.
+        "hosts allow" = "192.168.50. 127.0.0.1 localhost 100.64.0.0/10 fd7a:115c:a1e0::/48";
         "hosts deny" = "0.0.0.0/0";
         "guest account" = "nobody";
         "map to guest" = "bad user";
+        # Apple SMB extensions. Without fruit + named streams, iOS Files and
+        # macOS Finder treat the share as read-only even though writes work.
+        "vfs objects" = "catia fruit streams_xattr";
+        "fruit:metadata" = "stream";
+        "fruit:model" = "MacSamba";
+        "fruit:posix_rename" = "yes";
+        "fruit:veto_appledouble" = "no";
+        "fruit:nfs_aces" = "no";
+        "fruit:wipe_intentionally_left_blank_rfork" = "yes";
+        "fruit:delete_empty_adfiles" = "yes";
       };
       media = {
         path = "/mnt/media";
@@ -248,6 +272,7 @@ in
   # Create media directory
   systemd.tmpfiles.rules = [
     "d /mnt/media 0755 frerom users -"
+    "d /mnt/media/music 0755 frerom users -"
   ];
 
   # Claude Code remote control service.

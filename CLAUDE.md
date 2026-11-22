@@ -173,9 +173,10 @@ flake.nix
 - **Services:**
   - Jellyfin media server at https://jellyfin.frerom.se (nginx → 8096, port 8096 not exposed)
   - Grafana network monitor at https://grafana.frerom.se
+  - Navidrome music server at https://music.frerom.se (nginx → 4533, localhost only), library `/mnt/media/music`
   - TLS: Let's Encrypt wildcard `*.frerom.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); public wildcard `*.frerom.se` A record at Loopia → 192.168.50.100 (apex/www still parked), so new services in `proxiedServices` need no DNS edits
   - Tailscale: server advertises subnet route `192.168.50.100/32`, so the `*.frerom.se` services work remotely from tailnet devices (same URLs/cert)
-  - Samba/SMB file sharing (ports 139, 445)
+  - Samba/SMB file sharing (ports 139, 445) at `smb://files.frerom.se/media` (plain DNS name, not via nginx); allowed from LAN + tailnet (`100.64.0.0/10`); `fruit`/`streams_xattr` VFS modules enabled, without which iOS Files/macOS Finder show the share as read-only
   - NFS file sharing (port 2049)
   - WebDAV via nginx (port 80) - currently disabled
   - Avahi for mDNS discovery
