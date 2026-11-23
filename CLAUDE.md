@@ -174,7 +174,6 @@ flake.nix
   - Jellyfin media server at https://jellyfin.frerom.se (nginx → 8096, port 8096 not exposed)
   - Grafana network monitor at https://grafana.frerom.se
   - Navidrome music server at https://music.frerom.se (nginx → 4533, localhost only), library `/mnt/media/music`
-  - Notesnook sync server (`hosts/server/notesnook.nix`): podman containers mirroring upstream's docker-compose (MongoDB, Silo S3, identity, sync, SSE, Monograph) on a private podman network `10.89.0.0/24`. URLs: sync `https://notes.frerom.se`, auth `notes-auth`, events `notes-events`, attachments `notes-files`, monograph `notes-monograph`. Secrets in `/var/lib/secrets/notesnook.env`. No SMTP, so use authenticator-app 2FA. dnsmasq uses `bind-dynamic` + `except-interface = podman*/veth*` so podman's aardvark-dns can bind port 53 on the bridge
   - TLS: Let's Encrypt wildcard `*.frerom.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); public wildcard `*.frerom.se` A record at Loopia → 192.168.50.100 (apex/www still parked), so new services in `proxiedServices` need no DNS edits
   - Tailscale: server advertises subnet route `192.168.50.100/32`, so the `*.frerom.se` services work remotely from tailnet devices (same URLs/cert)
   - Samba/SMB file sharing (ports 139, 445) at `smb://files.frerom.se/media` (plain DNS name, not via nginx); allowed from LAN + tailnet (`100.64.0.0/10`); `fruit`/`streams_xattr` VFS modules enabled, without which iOS Files/macOS Finder show the share as read-only

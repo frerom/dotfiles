@@ -18,12 +18,6 @@ let
     jellyfin = 8096;
     grafana = 3000;  # Grafana, see network-monitor.nix
     music = 4533;    # Navidrome
-    # Notesnook sync server, see notesnook.nix
-    notes = 5264;
-    notes-auth = 8264;
-    notes-events = 7264;
-    notes-files = 9000;
-    notes-monograph = 6264;
   };
 in
 {
@@ -32,7 +26,6 @@ in
     ../../common.nix
     ../../server-common.nix
     ./network-monitor.nix
-    ./notesnook.nix
   ];
 
   networking.hostName = "server";
@@ -170,12 +163,6 @@ in
       domain = localDomain;
       expand-hosts = true;
       cache-size = 1000;
-
-      # Leave podman bridges alone: podman's aardvark-dns needs port 53 on
-      # them for container name resolution (Notesnook). bind-dynamic binds
-      # per interface, and copes with interfaces that appear later.
-      bind-dynamic = true;
-      except-interface = [ "podman*" "veth*" ];
 
       # "server" and each proxied service -> this machine.
       # address=/name/ip matches "name", "name.home.arpa" and
