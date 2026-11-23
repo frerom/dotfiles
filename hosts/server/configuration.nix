@@ -26,6 +26,7 @@ in
     ../../common.nix
     ../../server-common.nix
     ./network-monitor.nix
+    ./anytype.nix
   ];
 
   networking.hostName = "server";

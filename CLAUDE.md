@@ -174,6 +174,7 @@ flake.nix
   - Jellyfin media server at https://jellyfin.frerom.se (nginx → 8096, port 8096 not exposed)
   - Grafana network monitor at https://grafana.frerom.se
   - Navidrome music server at https://music.frerom.se (nginx → 4533, localhost only), library `/mnt/media/music`
+  - Anytype self-hosted sync network (`hosts/server/anytype.nix`): any-sync-bundle all-in-one podman container (all any-sync services + embedded MongoDB/Redis), pinned version. Clients connect directly on TCP 33010 / UDP 33020 (not via nginx), advertised as `notes.frerom.se` and 192.168.50.100. Apps import `https://notes.frerom.se/client-config.yml` or `smb://files.frerom.se/anytype/client-config.yml` (read-only share; copied from the state dir by a path unit). State incl. network private keys in `/var/lib/any-sync-bundle` (root-only); back up only after a clean stop
   - TLS: Let's Encrypt wildcard `*.frerom.se` via DNS-01 (Loopia API, creds in `/var/lib/secrets/loopia.env`); public wildcard `*.frerom.se` A record at Loopia → 192.168.50.100 (apex/www still parked), so new services in `proxiedServices` need no DNS edits
   - Tailscale: server advertises subnet route `192.168.50.100/32`, so the `*.frerom.se` services work remotely from tailnet devices (same URLs/cert)
   - Samba/SMB file sharing (ports 139, 445) at `smb://files.frerom.se/media` (plain DNS name, not via nginx); allowed from LAN + tailnet (`100.64.0.0/10`); `fruit`/`streams_xattr` VFS modules enabled, without which iOS Files/macOS Finder show the share as read-only
